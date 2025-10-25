@@ -1,12 +1,15 @@
 package com.encenape.service;
 
 import com.encenape.dto.UsuarioRequestDTO;
+import com.encenape.dto.UsuarioUpdatePerfilDTO;
 import com.encenape.model.Usuario;
 import com.encenape.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,6 +21,9 @@ public class UsuarioService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private EmailService emailService;
 
     public Usuario cadastrarUsuario(UsuarioRequestDTO requestDTO) { // Recebe o DTO de requisição
         // Verifica se o email já existe no banco
@@ -56,27 +62,23 @@ public class UsuarioService {
         return Optional.empty();
     }
 
-    public Optional<Usuario> atualizarUsuario(Long id, UsuarioRequestDTO requestDTO) {
-        // 1. Busca o usuário no banco de dados pelo ID
-        Optional<Usuario> usuarioOptional = usuarioRepository.findById(id);
+   public Usuario atualizarPerfil(Long id, UsuarioUpdatePerfilDTO updateDTO) {
+        // 1. Busca o usuário
+        Usuario usuarioExistente = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        // 2. Se o usuário existir, atualiza seus dados
-        if (usuarioOptional.isPresent()) {
-            Usuario usuarioExistente = usuarioOptional.get();
-
-            // Atualiza apenas os campos que vieram no DTO
-            // (Poderíamos adicionar validações aqui, como não permitir alterar o email)
-            usuarioExistente.setNome(requestDTO.getNome());
-            
-            // Nota: Por simplicidade, não estamos permitindo a alteração de email ou senha aqui.
-            // A alteração de senha deveria ter seu próprio endpoint e fluxo de segurança.
-
-            // 3. Salva o usuário com os dados atualizados e o retorna
-            return Optional.of(usuarioRepository.save(usuarioExistente));
+        // 2. Verifica se o novo email já está em uso por OUTRO usuário
+        Optional<Usuario> conflitoEmail = usuarioRepository.findByEmailAndIdNot(updateDTO.getEmail(), id);
+        if (conflitoEmail.isPresent()) {
+            throw new IllegalArgumentException("Este email já está em uso por outra conta.");
         }
 
-        // 4. Retorna vazio se o usuário não foi encontrado
-        return Optional.empty();
+        // 3. Atualiza os dados
+        usuarioExistente.setNome(updateDTO.getNome());
+        usuarioExistente.setEmail(updateDTO.getEmail());
+
+        // 4. Salva no banco
+        return usuarioRepository.save(usuarioExistente);
     }
 
     public boolean deletarUsuario(Long id) {
@@ -91,5 +93,55 @@ public class UsuarioService {
         
         // 4. Se o usuário não existir, retorna 'false'.
         return false;
+    }
+
+    public void solicitarRedefinicaoSenha(String email) {
+        Optional<Usuario> usuarioOptional = usuarioRepository.findByEmail(email);
+
+        if (usuarioOptional.isPresent()) {
+            Usuario usuario = usuarioOptional.get();
+            
+            // 1. Gera um token aleatório
+            String token = UUID.randomUUID().toString();
+            
+            // 2. Define a expiração (ex: 10 minutos)
+            usuario.setResetToken(token);
+            usuario.setResetTokenExpiry(LocalDateTime.now().plusMinutes(10));
+            
+            // 3. Salva o token no banco
+            usuarioRepository.save(usuario);
+            
+            // 4. Envia o email
+            emailService.sendPasswordResetEmail(usuario.getEmail(), token);
+        }
+    }
+
+    public boolean redefinirSenha(String token, String novaSenha) {
+        Optional<Usuario> usuarioOptional = usuarioRepository.findByResetToken(token);
+
+        if (usuarioOptional.isEmpty()) {
+            return false; // Token não encontrado
+        }
+
+        Usuario usuario = usuarioOptional.get();
+
+        // Verifica se o token expirou
+        if (usuario.getResetTokenExpiry().isBefore(LocalDateTime.now())) {
+            // Opcional: Limpe o token expirado
+            usuario.setResetToken(null);
+            usuario.setResetTokenExpiry(null);
+            usuarioRepository.save(usuario);
+            return false; // Token expirado
+        }
+
+        // Sucesso! Vamos redefinir a senha
+        usuario.setSenha(passwordEncoder.encode(novaSenha));
+        
+        // Invalida o token para que não possa ser usado novamente
+        usuario.setResetToken(null);
+        usuario.setResetTokenExpiry(null);
+        
+        usuarioRepository.save(usuario);
+        return true;
     }
 }

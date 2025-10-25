@@ -3,6 +3,7 @@ package com.encenape.dto;
 import java.time.LocalDateTime;
 
 import com.encenape.model.Evento;
+import com.encenape.model.enums.CategoriaEvento;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -15,6 +16,7 @@ public class EventoResponseDTO {
     private String descricao;
     private LocalDateTime data;
     private String local;
+    private CategoriaEvento categoria;
 
     //conversão de Model para DTO
     public EventoResponseDTO(Evento evento) {
@@ -23,5 +25,6 @@ public class EventoResponseDTO {
         this.descricao = evento.getDescricao();
         this.data = evento.getData();
         this.local = evento.getLocal();
+        this.categoria = evento.getCategoria();
     }
 }

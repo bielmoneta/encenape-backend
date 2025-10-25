@@ -19,11 +19,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.encenape.dto.EventoRequestDTO;
 import com.encenape.dto.EventoResponseDTO;
 import com.encenape.model.Evento;
+import com.encenape.model.enums.CategoriaEvento;
 import com.encenape.service.EventoService;
 
 @RestController
 @RequestMapping("api/eventos")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:4200")
 public class EventoController {
     
     @Autowired
@@ -69,5 +70,26 @@ public class EventoController {
             return ResponseEntity.noContent().build(); // Sucesso, sem conteúdo
         }
         return ResponseEntity.notFound().build(); // Não encontrado
+    }
+
+    @GetMapping("/categoria/{categoria}")
+    public ResponseEntity<List<EventoResponseDTO>> listarPorCategoria(@PathVariable String categoria) {
+        try {
+            // Converte a String da URL (ex: "TEATRO") para o Enum
+            CategoriaEvento categoriaEnum = CategoriaEvento.valueOf(categoria.toUpperCase());
+            
+            // Busca no serviço
+            List<Evento> eventos = eventoService.listarPorCategoria(categoriaEnum);
+            
+            // Converte para DTOs de resposta
+            List<EventoResponseDTO> responseDTOs = eventos.stream()
+                    .map(EventoResponseDTO::new)
+                    .collect(Collectors.toList());
+                    
+            return ResponseEntity.ok(responseDTOs);
+        } catch (IllegalArgumentException e) {
+            // Retorna 400 Bad Request se a categoria não existir (ex: /categoria/rock)
+            return ResponseEntity.badRequest().body(null); 
+        }
     }
 }

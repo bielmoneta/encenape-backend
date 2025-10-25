@@ -17,8 +17,15 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable()) // Desabilita CSRF para simplificar testes
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/usuarios/**", "/api/eventos/**").permitAll() // Permite acesso sem autenticação a endpoints de usuários
-                .anyRequest().authenticated() // Requer autenticação para qualquer outra requisição
+                .requestMatchers(
+                    "/api/usuarios/cadastrar", 
+                    "/api/usuarios/logar",
+                    "/api/usuarios/esqueceu-senha",
+                    "/api/usuarios/resetar-senha",
+                    "/api/usuarios/{id}",
+                    "/api/eventos/**"
+                ).permitAll() 
+                .anyRequest().authenticated()
             );
         return http.build();
     }   

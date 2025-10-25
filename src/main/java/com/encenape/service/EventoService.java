@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.encenape.model.enums.CategoriaEvento;
 
 import com.encenape.dto.EventoRequestDTO;
 import com.encenape.model.Evento;
@@ -16,12 +17,13 @@ public class EventoService {
     @Autowired
     private EventoRepository eventoRepository;
 
-    public Evento criarEvento(EventoRequestDTO requestDTO) {
+public Evento criarEvento(EventoRequestDTO requestDTO) {
         Evento novoEvento = new Evento();
         novoEvento.setNome(requestDTO.getNome());
         novoEvento.setDescricao(requestDTO.getDescricao());
         novoEvento.setData(requestDTO.getData());
         novoEvento.setLocal(requestDTO.getLocal());
+        novoEvento.setCategoria(requestDTO.getCategoria());
         return eventoRepository.save(novoEvento);
     }
 
@@ -39,6 +41,7 @@ public class EventoService {
             eventoExistente.setDescricao(requestDTO.getDescricao());
             eventoExistente.setData(requestDTO.getData());
             eventoExistente.setLocal(requestDTO.getLocal());
+            eventoExistente.setCategoria(requestDTO.getCategoria());
             return eventoRepository.save(eventoExistente);
         });
     }
@@ -49,5 +52,9 @@ public class EventoService {
             return true;
         }
         return false;
+    }
+
+    public List<Evento> listarPorCategoria(CategoriaEvento categoria) {
+        return eventoRepository.findByCategoria(categoria);
     }
 }
