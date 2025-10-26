@@ -1,19 +1,34 @@
 package com.encenape.controller;
 
-import com.encenape.dto.EsqueceuSenhaDTO; 
+import com.encenape.dto.LoginRequest;
+import com.encenape.dto.JwtResponse;
+import com.encenape.dto.EsqueceuSenhaDTO;
+import com.encenape.dto.LoginRequestDTO;
 import com.encenape.dto.UsuarioUpdatePerfilDTO;
 import java.util.Map;
 import com.encenape.dto.ResetarSenhaDTO;
-import com.encenape.dto.LoginRequestDTO;
 import com.encenape.dto.UsuarioRequestDTO;
 import com.encenape.dto.UsuarioResponseDTO;
 import com.encenape.model.Usuario;
 import com.encenape.service.UsuarioService;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.encenape.security.JwtUtil;
+import com.encenape.security.UserDetailsImpl;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.util.Map;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,6 +41,12 @@ public class UsuarioController {
 
     @Autowired
     private UsuarioService usuarioService;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @PostMapping("/cadastrar")
     public ResponseEntity<?> cadastrar(@RequestBody UsuarioRequestDTO requestDTO) {
@@ -44,15 +65,28 @@ public class UsuarioController {
     }
 
     @PostMapping("/logar")
-    public ResponseEntity<?> logar(@RequestBody LoginRequestDTO loginRequest) {
-        Optional<Usuario> usuarioOptional = usuarioService.validarLogin(loginRequest.getEmail(), loginRequest.getSenha());
+    public ResponseEntity<?> logar(@RequestBody LoginRequest loginRequest) {
 
-        if (usuarioOptional.isPresent()) {
-            Usuario usuario = usuarioOptional.get();
-            return ResponseEntity.ok(Map.of("message", "Login bem-sucedido!", "usuarioId", usuario.getId(), "nome", usuario.getNome()));
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email ou senha inválidos.");
-        }
+        // 1. Tenta autenticar o usuário usando o Spring Security
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getSenha()));
+
+        // 2. Se a autenticação deu certo, coloca o usuário no contexto de segurança
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        
+        // 3. Gera o token JWT
+        String jwt = jwtUtil.generateJwtToken(authentication);
+
+        // 4. Pega os detalhes do usuário para retornar na resposta
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+        // 5. Retorna o token e os dados básicos do usuário
+        return ResponseEntity.ok(new JwtResponse(
+                jwt,
+                userDetails.getId(),
+                userDetails.getUsuario().getNome(), // Pega o nome do objeto Usuario aninhado
+                userDetails.getUsername() // getUsername() retorna o email
+        ));
     }
 
     // Endpoint para LISTAR todos os usuários
