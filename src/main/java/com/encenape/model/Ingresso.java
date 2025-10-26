@@ -28,7 +28,7 @@ public class Ingresso {
     @Column(name = "data_compra", nullable = false)
     private LocalDateTime dataCompra;
 
-    //TODO:
+    //lista:
     // adicionar outros campos no futuro: private String codigoQr;
     // @Enumerated(EnumType.STRING)
     // private StatusIngresso status; // Ex: VALIDO, UTILIZADO, CANCELADO.

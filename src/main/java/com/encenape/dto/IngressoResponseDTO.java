@@ -15,7 +15,7 @@ public class IngressoResponseDTO {
     private String eventoNome;
     private LocalDateTime eventoData;
     private String eventoLocal;
-    // TODO: adicionar status, qr code, etc.
+    //lista:adicionar status, qr code, etc.
 
     // Construtor que pega o Ingresso e extrai informações do Evento associado
     public IngressoResponseDTO(Ingresso ingresso) {

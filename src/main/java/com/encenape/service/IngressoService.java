@@ -35,7 +35,7 @@ public class IngressoService {
         Evento evento = eventoRepository.findById(eventoId)
                 .orElseThrow(() -> new RuntimeException("Evento não encontrado com ID: " + eventoId));
 
-        // TODO: Adicionar lógica futura (ex: verificar se o evento já passou, se há limite de ingressos, etc.)
+        // lista: Adicionar lógica futura (ex: verificar se o evento já passou, se há limite de ingressos, etc.)
 
         // 3. Cria o novo ingresso
         Ingresso novoIngresso = new Ingresso();

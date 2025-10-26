@@ -49,6 +49,7 @@ public class SecurityConfig {
             
             // Configura as regras de autorização para as requisições HTTP
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                 // Endpoints públicos (não exigem autenticação)
                 .requestMatchers(
                     "/api/usuarios/cadastrar", 
@@ -57,8 +58,9 @@ public class SecurityConfig {
                     "/api/usuarios/resetar-senha",
                     "/api/eventos",             
                     "/api/eventos/categoria/**" 
-                    // TODO: Permitir GET em /api/eventos/{id} também?
                 ).permitAll()
+
+                .requestMatchers("/api/ingressos/**").authenticated()
                 
                 // Qualquer outra requisição exige autenticação
                 .anyRequest().authenticated() 
