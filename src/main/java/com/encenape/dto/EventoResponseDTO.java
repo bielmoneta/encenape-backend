@@ -17,6 +17,7 @@ public class EventoResponseDTO {
     private LocalDateTime data;
     private String local;
     private CategoriaEvento categoria;
+    private String imagemUrl;
 
     //conversão de Model para DTO
     public EventoResponseDTO(Evento evento) {
@@ -26,5 +27,6 @@ public class EventoResponseDTO {
         this.data = evento.getData();
         this.local = evento.getLocal();
         this.categoria = evento.getCategoria();
+        this.imagemUrl = evento.getImagemUrl();
     }
 }

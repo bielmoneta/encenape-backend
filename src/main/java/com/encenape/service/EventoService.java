@@ -24,6 +24,7 @@ public Evento criarEvento(EventoRequestDTO requestDTO) {
         novoEvento.setData(requestDTO.getData());
         novoEvento.setLocal(requestDTO.getLocal());
         novoEvento.setCategoria(requestDTO.getCategoria());
+        novoEvento.setImagemUrl(requestDTO.getImagemUrl());
         return eventoRepository.save(novoEvento);
     }
 
@@ -42,6 +43,7 @@ public Evento criarEvento(EventoRequestDTO requestDTO) {
             eventoExistente.setData(requestDTO.getData());
             eventoExistente.setLocal(requestDTO.getLocal());
             eventoExistente.setCategoria(requestDTO.getCategoria());
+            eventoExistente.setImagemUrl(requestDTO.getImagemUrl());
             return eventoRepository.save(eventoExistente);
         });
     }

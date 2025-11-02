@@ -15,4 +15,5 @@ public class EventoRequestDTO {
     private LocalDateTime data;
     private String local;
     private CategoriaEvento categoria;
+    private String imagemUrl;
 }

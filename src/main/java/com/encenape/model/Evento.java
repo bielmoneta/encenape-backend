@@ -40,4 +40,7 @@ public class Evento {
     @Enumerated(EnumType.STRING) // Diz ao JPA para salvar o NOME da categoria (ex: "TEATRO") no banco
     @Column(nullable = false)
     private CategoriaEvento categoria;
+
+    @Column(name = "imagem_url", length = 512)
+    private String imagemUrl;
 }
